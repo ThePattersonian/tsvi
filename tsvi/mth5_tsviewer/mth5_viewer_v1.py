@@ -33,8 +33,8 @@ from tsvi.mth5_tsviewer.helpers import channel_summary_columns_to_display
 from tsvi.mth5_tsviewer.helpers import cpu_usage_widget
 from tsvi.mth5_tsviewer.helpers import get_templates_dict
 from tsvi.mth5_tsviewer.helpers import make_plots
-from tsvi.mth5_tsviewer.helpers import list_h5s_to_plot
 from tsvi.mth5_tsviewer.helpers import memory_usage_widget
+from tsvi.mth5_tsviewer.helpers import set_channel_paths
 
 
 hv.extension("bokeh")
@@ -232,10 +232,9 @@ class Tsvi(template):
             m = MTH5()
             m.open_mth5(file_path, mode = "r")
             df = m.channel_summary.to_dataframe()
+            file_version = m.file_version
             m.close_mth5()
-            df["file"] = file_name
-            df["channel_path"] = (df["file"] + "/" + df["station"] + "/" + df["run"] + "/" + df["component"])
-            df.set_index("channel_path", inplace = True)
+            set_channel_paths(df, file_name, file_version)
             self.channel_summary_dict[file_name] = df
             new_channels.extend(self.channel_summary_dict[file_name].index)
         self.channels.options = list(new_channels)

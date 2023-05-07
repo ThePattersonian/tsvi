@@ -62,6 +62,44 @@ def channel_summary_columns_to_display():
                          ]
     return displayed_columns
 
+
+def set_channel_paths(df, file_name, file_version):
+    """
+    ToDo: Consider making a class ChannelPathHandler
+    That has set_channel_paths method,
+    and also does the string unpacking
+    Parameters
+    ----------
+    df: pandas.core.frame.DataFrame from mth5 channel_summary
+
+    Returns
+    -------
+
+    """
+    df["file"] = file_name
+    if file_version == "0.1.0":
+        df["channel_path"] = (df["file"] + "/" +
+                              df["station"] + "/" +
+                              df["run"] + "/" +
+                              df["component"])
+    elif file_version == "0.2.0":
+        df["channel_path"] = (df["file"] + "/" +
+                              df["survey"] + "/" +
+                              df["station"] + "/" +
+                              df["run"] + "/" +
+                              df["component"])
+    df.set_index("channel_path", inplace = True)
+    return
+
+def parse_channel_path(selected_channel):
+    try: # m.file_version == "0.1.0"
+        selected_file, station, run, channel = selected_channel.split("/")
+        survey = None
+    except ValueError: # m.file_version == "0.2.0"
+        selected_file, survey, station, run, channel = selected_channel.split("/")
+    return selected_file, survey, station, run, channel
+
+
 # def plot_bokeh(xarray, shaded = False, shared = False):
 #     plot = xarray.hvplot(
 #                           width = 900,
@@ -136,7 +174,7 @@ def make_plots(obj):
     # plot_cards = make_plots(data_dict)
     # from holoviews.operation.datashader import datashade
     for selected_channel,data in data_dict.items():
-        selected_file, station, run, channel = selected_channel.split("/")
+        selected_file, survey, station, run, channel = parse_channel_path(selected_channel)
         ylabel = data.type
         if obj.subtract_mean_checkbox.value == True:
             data = data - data.mean()
@@ -214,9 +252,9 @@ def get_mth5_data_as_xarrays(selected_channels, file_paths):
         m = MTH5()
         m.open_mth5(file_paths[file], mode = "r")
         for selected_channel in selected_channels:
-            selected_file, station, run, channel = selected_channel.split("/")
+            selected_file, survey, station, run, channel = parse_channel_path(selected_channel)
             if selected_file == file:
-                data = m.get_channel(station, run, channel).to_channel_ts().to_xarray()
+                data = m.get_channel(station, run, channel, survey=survey).to_channel_ts().to_xarray()
                 # data = data.rename(data.attrs["mth5_type"]): "ex"--> "Electric"
                 #self.xarrays.append(data)
                 out_dict[selected_channel] = data
