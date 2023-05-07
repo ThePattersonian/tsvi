@@ -1,8 +1,15 @@
+"""
+The View component is responsible for presenting data to the user. The View component is
+ also responsible for capturing user input and passing it to the Controller component
+ for further processing.
+"""
 import holoviews as hv
 import hvplot
 import panel as pn
 
-from mth5.mth5 import MTH5
+from tsvi.mth5_tsviewer.control_helpers import list_h5s_to_plot
+from tsvi.mth5_tsviewer.control_helpers import parse_channel_path
+from tsvi.mth5_tsviewer.model_helpers import get_mth5_data_as_xarrays
 
 def cpu_usage_widget():
     cpu_usage = pn.indicators.Number(
@@ -28,27 +35,6 @@ def memory_usage_widget():
     )
     return memory_usage
 
-def list_h5s_to_plot(channels_list):
-    """
-
-    Parameters
-    ----------
-    channels_list: string representation of the data paths associated with channels
-
-    Returns
-    -------
-    used_files: list
-        Each element of the list is the name of an mth5 file that is associated with
-        at least one channel in the list.
-
-    """
-    used_files = []
-    for selected_channel in channels_list:
-        file_name = selected_channel.split("/")[0]
-        if file_name not in used_files:
-            used_files.append(file_name)
-    return used_files
-
 
 def channel_summary_columns_to_display():
     # Configure the displayed columns in the Channels Tab
@@ -63,43 +49,6 @@ def channel_summary_columns_to_display():
     return displayed_columns
 
 
-def set_channel_paths(df, file_name, file_version):
-    """
-    ToDo: Consider making a class ChannelPathHandler
-    That has set_channel_paths method,
-    and also does the string unpacking
-    Parameters
-    ----------
-    df: pandas.core.frame.DataFrame from mth5 channel_summary
-
-    Returns
-    -------
-
-    """
-    df["file"] = file_name
-    if file_version == "0.1.0":
-        df["channel_path"] = (df["file"] + "/" +
-                              df["station"] + "/" +
-                              df["run"] + "/" +
-                              df["component"])
-    elif file_version == "0.2.0":
-        df["channel_path"] = (df["file"] + "/" +
-                              df["survey"] + "/" +
-                              df["station"] + "/" +
-                              df["run"] + "/" +
-                              df["component"])
-    df.set_index("channel_path", inplace = True)
-    return
-
-def parse_channel_path(selected_channel):
-    try: # m.file_version == "0.1.0"
-        selected_file, station, run, channel = selected_channel.split("/")
-        survey = None
-    except ValueError: # m.file_version == "0.2.0"
-        selected_file, survey, station, run, channel = selected_channel.split("/")
-    return selected_file, survey, station, run, channel
-
-
 # def plot_bokeh(xarray, shaded = False, shared = False):
 #     plot = xarray.hvplot(
 #                           width = 900,
@@ -108,40 +57,8 @@ def parse_channel_path(selected_channel):
 #                           shared_axes = shared
 #                          )
 #     return plot
-def get_templates_dict():
-    """
-     Make template choice dictionary
-     More information about template choices and functionality is here:
-     https://panel.holoviz.org/user_guide/Templates.html
-     Returns
-     templates: dict
-
-    -------
-
-    """
-    templates = {}
-    templates["bootstrap"] = pn.template.BootstrapTemplate
-    templates["fast"] = pn.template.FastListTemplate
-    templates["golden"] = pn.template.GoldenTemplate
-    templates["grid"] = pn.template.FastGridTemplate
-    return templates
 
 
-def invert(event, data):
-  data = -1 * data
-  return data
-
-  # def get_card_controls():
-  # THe idea here is to track the buttons /widgets that we want beside the plot
-  #     annotate_button = pn.widgets.Button(name = "Annotate", button_type = "primary", width = 100)
-  #     invert_button = pn.widgets.Button(name = "Invert", button_type = "primary", width = 100)
-  #     # def invert(self, *args, **params):
-  #     #   data = -1 * data
-  #     # invert_button.on_click(invert(event, data))
-  #     controls = pn.Column(annotate_button,
-  #                          invert_button,
-  #                          sizing_mode = "fixed", width = 200,)
-  #     return controls
 def make_plots(obj):
     """
     Gets the data and plots it.
@@ -226,37 +143,3 @@ def make_plots(obj):
     return
 
 
-def get_mth5_data_as_xarrays(selected_channels, file_paths):
-    """
-    ToDo:
-    - This can be modified in future to support chunking read in
-    - interaction with the intake package belongs here.
-    - This function works on multiple mth5 files in sequence. Another way to do this
-    would to be to invert the two for loops so that the outer loop iterates over
-    selected_channels first and then a one-line function accesses the data for that
-    channel.
-
-    Parameters
-    ----------
-    selected_channels: list
-    file_paths
-    kwargs
-
-    Returns
-    -------
-
-    """
-    out_dict = {}
-    used_files = list_h5s_to_plot(selected_channels)
-    for file in used_files:
-        m = MTH5()
-        m.open_mth5(file_paths[file], mode = "r")
-        for selected_channel in selected_channels:
-            selected_file, survey, station, run, channel = parse_channel_path(selected_channel)
-            if selected_file == file:
-                data = m.get_channel(station, run, channel, survey=survey).to_channel_ts().to_xarray()
-                # data = data.rename(data.attrs["mth5_type"]): "ex"--> "Electric"
-                #self.xarrays.append(data)
-                out_dict[selected_channel] = data
-        m.close_mth5()
-    return out_dict

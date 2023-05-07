@@ -7,12 +7,16 @@ class TestStringMethods(unittest.TestCase):
         pass
 
     def test_cpu_usage_widget(self):
-        from tsvi.mth5_tsviewer.helpers import cpu_usage_widget
+        from tsvi.mth5_tsviewer.view_helpers import cpu_usage_widget
         cpu_usage_widget()
 
     def test_memory_usage_widget(self):
-        from tsvi.mth5_tsviewer.helpers import memory_usage_widget
+        from tsvi.mth5_tsviewer.view_helpers import memory_usage_widget
         memory_usage_widget()
+
+    def test_channel_summary_columns_to_display(self):
+        from tsvi.mth5_tsviewer.view_helpers import channel_summary_columns_to_display
+        channel_summary_columns_to_display()
 
     def test_isupper(self):
         pass

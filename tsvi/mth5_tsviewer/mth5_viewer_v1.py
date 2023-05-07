@@ -14,27 +14,20 @@ from matplotlib.figure import Figure
 
 import bokeh
 import holoviews as hv
-import hvplot
-import hvplot.xarray
-import matplotlib as plt
-import numpy as np
 import pandas as pd
 import panel as pn
 import pathlib
 import psutil
-import time
 import xarray
 
-import mt_metadata
-import mth5
 from mth5.mth5 import MTH5
 
-from tsvi.mth5_tsviewer.helpers import channel_summary_columns_to_display
-from tsvi.mth5_tsviewer.helpers import cpu_usage_widget
-from tsvi.mth5_tsviewer.helpers import get_templates_dict
-from tsvi.mth5_tsviewer.helpers import make_plots
-from tsvi.mth5_tsviewer.helpers import memory_usage_widget
-from tsvi.mth5_tsviewer.helpers import set_channel_paths
+from tsvi.mth5_tsviewer.control_helpers import set_channel_paths
+from tsvi.mth5_tsviewer.model_helpers import get_templates_dict
+from tsvi.mth5_tsviewer.view_helpers import channel_summary_columns_to_display
+from tsvi.mth5_tsviewer.view_helpers import cpu_usage_widget
+from tsvi.mth5_tsviewer.view_helpers import make_plots
+from tsvi.mth5_tsviewer.view_helpers import memory_usage_widget
 
 
 hv.extension("bokeh")
